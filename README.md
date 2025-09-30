@@ -84,7 +84,3 @@ export HOST="0.0.0.0"
 export PORT="8000"
 export MODEL_ID="us.anthropic.claude-3-5-sonnet-20241022-v2:0"
 ```
-
-## License
-
-MIT

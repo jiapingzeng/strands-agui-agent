@@ -15,9 +15,10 @@ from fastapi.responses import StreamingResponse
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from ag_ui.core import RunAgentInput, RunErrorEvent
+from ag_ui.encoder import EventEncoder
+
 from .agent import StrandsAGUIAgent
-from .agui_types import RunAgentInput
-from .encoder import EventEncoder
 
 
 class ToolResultsInput(BaseModel):
@@ -61,7 +62,7 @@ def create_app(agent: StrandsAGUIAgent = None) -> FastAPI:
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Configure appropriately for production
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -111,7 +112,6 @@ def create_app(agent: StrandsAGUIAgent = None) -> FastAPI:
             except Exception as e:
                 logger.error(f"Error in streaming: {e}")
                 # Send error event
-                from .agui_types import RunErrorEvent
                 error_event = RunErrorEvent(
                     message=str(e),
                     code="STREAMING_ERROR"
@@ -259,7 +259,6 @@ def create_app(agent: StrandsAGUIAgent = None) -> FastAPI:
 
             except Exception as e:
                 logger.error(f"Error in continuation: {e}")
-                from .agui_types import RunErrorEvent
                 error_event = RunErrorEvent(
                     message=str(e),
                     code="CONTINUATION_ERROR"

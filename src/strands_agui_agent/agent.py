@@ -17,7 +17,7 @@ from strands.types._events import TypedEvent, ModelStreamChunkEvent, ToolStreamE
 from strands.types.content import ContentBlock
 from strands.types.tools import ToolResult
 
-from .agui_types import (
+from ag_ui.core import (
     Event,
     Message,
     RunAgentInput,
