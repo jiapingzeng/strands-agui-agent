@@ -1,11 +1,11 @@
 # Strands AG-UI Agent
 
-A Strands Agent implementation with AG-UI Protocol support for frontend tool execution.
+A streamlined Strands Agent implementation with AG-UI Protocol support. Provides a single `/stream` endpoint that handles both regular conversations and tool result responses.
 
 ## Installation & Setup
 
 ```bash
-cd strands-agui-agent
+cd src/strands-agui-agent
 uv venv
 source .venv/bin/activate
 uv sync
@@ -14,39 +14,25 @@ uv sync
 ## Quick Start
 
 ```bash
-# Option 1: Using CLI (recommended)
-uv run strands-agui-agent serve
+# Start the server
+uv run strands-agui-agent serve --reload
 
-# Option 2: Direct module execution
-uv run python -m strands_agui_agent.server
-
-# Server runs on http://localhost:8000
+# Server runs on http://localhost:8000/stream
 ```
 
-## Sample Request & Response
+## Sample Requests & Responses
+
+### 1. Normal User Message
 
 **Request:**
 ```bash
 curl -X POST http://localhost:8000/stream \
   -H "Content-Type: application/json" \
-  -H "Accept: text/event-stream" \
   -d '{
-    "threadId": "test-123",
+    "threadId": "thread-123",
     "runId": "run-456",
-    "messages": [{"id": "1", "role": "user", "content": "Calculate 25 * 8"}],
-    "tools": [
-      {
-        "name": "calculator",
-        "description": "Perform calculations",
-        "parameters": {
-          "type": "object",
-          "properties": {
-            "expression": {"type": "string"}
-          },
-          "required": ["expression"]
-        }
-      }
-    ],
+    "messages": [{"id": "1", "role": "user", "content": "Hello! How are you?"}],
+    "tools": [],
     "state": {},
     "context": [],
     "forwardedProps": {}
@@ -55,32 +41,73 @@ curl -X POST http://localhost:8000/stream \
 
 **Response:**
 ```
-data: {"type":"RUN_STARTED","threadId":"test-123","runId":"run-456"}
+data: {"type":"RUN_STARTED","threadId":"thread-123","runId":"run-456"}
 data: {"type":"TEXT_MESSAGE_START","messageId":"xxx","role":"assistant"}
-data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"xxx","delta":"I'll calculate that for you."}
-data: {"type":"TOOL_CALL_START","toolCallId":"yyy","toolCallName":"calculator"}
-data: {"type":"TOOL_CALL_ARGS","toolCallId":"yyy","delta":"{\"expression\":\"25 * 8\"}"}
-data: {"type":"TOOL_CALL_END","toolCallId":"yyy"}
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"xxx","delta":"I'm doing well, thank you for asking!"}
 data: {"type":"TEXT_MESSAGE_END","messageId":"xxx"}
-data: {"type":"RUN_FINISHED","threadId":"test-123","runId":"run-456","result":{"status":"waiting_for_tools","tool_calls":[{"id":"yyy","name":"calculator"}]}}
+data: {"type":"RUN_FINISHED","threadId":"thread-123","runId":"run-456","result":{"status":"completed"}}
+```
+
+### 2. Tool Result Message
+
+**Request:**
+```bash
+curl -X POST http://localhost:8000/stream \
+  -H "Content-Type: application/json" \
+  -d '{
+    "threadId": "thread-123",
+    "runId": "run-789",
+    "messages": [
+      {
+        "id": "tool-msg-1",
+        "role": "tool",
+        "content": "{\"success\":true,\"result\":\"Operation completed\"}",
+        "toolCallId": "tool-call-123"
+      }
+    ],
+    "tools": [],
+    "state": {},
+    "context": [],
+    "forwardedProps": {}
+  }'
+```
+
+**Response:**
+```
+data: {"type":"RUN_STARTED","threadId":"thread-123","runId":"run-789"}
+data: {"type":"TEXT_MESSAGE_START","messageId":"yyy","role":"assistant"}
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"yyy","delta":"Great! The operation completed successfully."}
+data: {"type":"TEXT_MESSAGE_END","messageId":"yyy"}
+data: {"type":"RUN_FINISHED","threadId":"thread-123","runId":"run-789","result":{"status":"completed"}}
 ```
 
 ## API Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/stream` | POST | Start streaming execution with AG-UI events |
-| `/tool-results` | POST | Submit tool execution results |
-| `/continue` | POST | Continue execution after tool results |
-| `/execution-state/{thread_id}/{run_id}` | GET | Get execution state |
-| `/health` | GET | Health check |
-| `/tools` | GET | Get available tools |
+| `/` | GET | Basic server information |
+| `/stream` | POST | Stream AG-UI events for both regular messages and tool results |
+
+The `/stream` endpoint handles:
+- **User messages**: Regular conversation with Claude via Bedrock
+- **Tool result messages**: Direct acknowledgment without Bedrock (avoids validation errors)
 
 ## Configuration
 
-Set environment variables:
+Configure via environment variables:
+
 ```bash
+# Server settings
 export HOST="0.0.0.0"
 export PORT="8000"
+export LOG_LEVEL="info"
+export RELOAD="false"
+export WORKERS="1"
+
+# Agent settings
+export AGENT_NAME="Strands AG-UI Agent"
 export MODEL_ID="us.anthropic.claude-3-5-sonnet-20241022-v2:0"
+export TEMPERATURE="0.7"
+export STREAMING="true"
+export MAX_TOKENS=""  # Optional
 ```

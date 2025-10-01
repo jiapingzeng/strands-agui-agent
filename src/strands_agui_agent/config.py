@@ -21,7 +21,7 @@ class ServerConfig(BaseModel):
 class AgentConfig(BaseModel):
     """Agent configuration settings."""
     name: str = "Strands AG-UI Agent"
-    model_id: str = "us.amazon.nova-pro-v1:0"
+    model_id: str = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
     temperature: float = 0.7
     streaming: bool = True
     max_tokens: Optional[int] = None
@@ -45,7 +45,7 @@ class Config(BaseModel):
             ),
             agent=AgentConfig(
                 name=os.getenv("AGENT_NAME", "Strands AG-UI Agent"),
-                model_id=os.getenv("MODEL_ID", "us.amazon.nova-pro-v1:0"),
+                model_id=os.getenv("MODEL_ID", "us.anthropic.claude-3-5-sonnet-20241022-v2:0"),
                 temperature=float(os.getenv("TEMPERATURE", "0.7")),
                 streaming=os.getenv("STREAMING", "true").lower() == "true",
                 max_tokens=int(os.getenv("MAX_TOKENS")) if os.getenv("MAX_TOKENS") else None,
